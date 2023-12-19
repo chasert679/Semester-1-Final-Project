@@ -20,7 +20,7 @@ WHITE = (255, 255, 255)
 
 
 class RaceGame:
-    def __init__(self, track_length, num_ai, time_limit, player_image_path):
+    def __init__(self, track_length, num_ai, time_limit, player_image_path, ai_image_path):
         self.track_length = track_length
         self.num_ai = num_ai
         self.player_position = 0  # Start player on the left side of the lanes
@@ -39,6 +39,9 @@ class RaceGame:
         # Load player image
         self.player_image = pygame.image.load(player_image_path)
         self.player_image = pygame.transform.scale(self.player_image, (PLAYER_WIDTH, PLAYER_HEIGHT))
+
+        self.ai_image = pygame.image.load(ai_image_path)
+        self.ai_image = pygame.transform.scale(self.ai_image, (AI_WIDTH, AI_HEIGHT))
 
         # Adjust starting position of the player a few pixels above
         self.player_position_y = LANE_HEIGHT - 75
@@ -65,9 +68,10 @@ class RaceGame:
         player_image_scaled = pygame.transform.scale(self.player_image, (player_width, player_height))
         self.screen.blit(player_image_scaled, (self.player_position, self.player_position_y))
 
-        # Draw AI opponents
-        for i, ai_position in enumerate(self.ai_positions):
-            pygame.draw.rect(self.screen, WHITE, (self.ai_positions[i], (i + 1) * LANE_HEIGHT + (LANE_HEIGHT - AI_HEIGHT) // 2, AI_WIDTH, AI_HEIGHT))
+
+        for i in range(1, 6):
+            ai_image_scaled = pygame.transform.scale(self.ai_image, (AI_WIDTH*2, AI_HEIGHT*2))
+            self.screen.blit(ai_image_scaled, (self.ai_positions[i-1], i * LANE_HEIGHT + (LANE_HEIGHT - AI_HEIGHT) // 2))
 
         # Update the display
         pygame.display.flip()
@@ -120,13 +124,14 @@ class RaceGame:
                 self.ai_positions[i] = 0  # Adjust position to prevent overshooting
 
     def check_winner(self):
-        laps_completed = self.player_position // self.track_length
+        player_laps_completed = abs(self.player_position) // self.track_length
+        ai_laps_completed = all(ai >= 3 * self.track_length and ai <= 0 for ai in self.ai_positions)
 
-        if laps_completed >= 3 and all(ai >= 3 * self.track_length for ai in self.ai_positions):
+        if player_laps_completed >= 3 and ai_laps_completed:
             return "It's a tie!"
-        elif laps_completed >= 3:
+        elif player_laps_completed >= 3:
             return "Player wins!"
-        elif all(ai >= 3 * self.track_length for ai in self.ai_positions):
+        elif ai_laps_completed:
             return "AI wins!"
         else:
             return None
@@ -162,5 +167,5 @@ class RaceGame:
 if __name__ == "__main__":
     # Example usage with 5 AI opponents, a longer time limit of 60 seconds,
     # and specifying the path to the player's image file
-    race_game = RaceGame(track_length=WIDTH, num_ai=5, time_limit=60, player_image_path='7129395.png')
+    race_game = RaceGame(track_length=WIDTH, num_ai=5, time_limit=60, player_image_path='7129395.png', ai_image_path='aiswimmer.png')
     race_game.play_game()
